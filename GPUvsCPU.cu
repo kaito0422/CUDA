@@ -13,7 +13,7 @@
 typedef int		cuda_int;
 typedef int		cpu_int;
 
-const int device = 0;			// ÔÚMatebook 14ÉÏÖ»ÓĞÒ»¸öMX250
+const int device = 0;			// åœ¨Matebook 14ä¸Šåªæœ‰ä¸€ä¸ªMX250
 int deviceNum;
 int maxBlockNumX;
 int maxBlockNumY;
@@ -33,7 +33,7 @@ cudaError_t cudaEnvInit()
 	cudaError_t cudaStatus;
 	int value;
 
-	/* ÔÚÓ²¼şÆ½Ì¨ÉÏÑ¡ÔñÒ»¸öÖ§³ÖcudaµÄÉè±¸ */
+	/* åœ¨ç¡¬ä»¶å¹³å°ä¸Šé€‰æ‹©ä¸€ä¸ªæ”¯æŒcudaçš„è®¾å¤‡ */
 	cudaStatus = cudaGetDeviceCount(&deviceNum);
 	cudaStatus = cudaGetDeviceProperties(&deviceProp, 0);
 	cudaStatus = cudaSetDevice(device);
