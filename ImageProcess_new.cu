@@ -61,7 +61,7 @@ cudaError_t cudaEnvInit()
 }
 
 void cudaShowDevInfo()
-{
+{ 
 	std::cout << "CUDA device number: " << deviceNum << std::endl;
 	std::cout << "CUDA device name: " << deviceProp.name << std::endl;
 	std::cout << "CUDA device is " << (deviceProp.integrated == 1 ? "integrated" : "discreted") << std::endl;
