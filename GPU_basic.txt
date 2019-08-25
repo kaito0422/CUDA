@@ -1,3 +1,32 @@
 对于GPU架构，可以从两方面来说。一方面是硬件微架构，另一方面是软件编程架构（这里就说CUDA）
 
-在GPU硬件上，GPU（在PC端）会挂在PCIE总线上。PCIE总线的带宽是5GB/s，因此可以实现较高速的数据传输
+在GPU硬件上，GPU（在PC端）会挂在PCIE总线上。PCIE总线的带宽是5GB/s，因此可以实现较高速的数据传输。
+在GPU内部，首先会包含多个SM（Streaming Multiprocessor），每个SM中又会包含多个SP（Streaming Processor），每一个SP都是一个SIMD处理器。
+
+在软件编程模型上，会用一个kernel函数来表示要在GPU上每个thread要执行的操作。然后会构建多个thread，每个thread执行的指令都一样，但是处理的数据不一样。
+在GPU编程中，我们会把32个thread合并成为一个warp，在GPU硬件中，一个warp是最小的调度单位（实际上是半个warp，为了实现在半个warp有大部分thread被阻塞时可
+以调度另一半的thread来执行，以掩盖阻塞的延时）。但是warp在编程中我们是不嫩过去设置改变其值的，我们只能把若干thread组织成block，一个block可以包含多个thread，一个block内的thread由其在block内的x和y。
+block本身也可以按照一维组织，也可以按照二维组织。如果是二维的block，则有一些变量用来存放当前thread的ID信息
+gridDim {x, y}    一个gird是由许多block组成的，gridDim.x表示横坐标方向上有多少个block；gridDim.y表示纵坐标方向上有多少个block
+blockIdx {x, y}   blockIdx.x表示在横坐标方向上是第几个block；blockIdx.y表示在纵坐标方向上是第几个block
+blockDim {x, y}   blockDim.x表示在一个block内，横坐标方向有多少个thread；blockDim.y表示在一个block内，纵坐标方向有多少个thread
+threadIdx {x, y}  threadIdx.x表示在一个block内当前thread在横坐标方向上是第几个；threadIdx.y表示在一个block内当前thread在纵坐标方向上是第几个
+
+因此要计算一个block在全局的ID
+block_idx = blockIdx.y * gridDim.x + blockIdx.x;
+
+要计算一个thread在block内的局部ID
+thread_local_id = threadIdx.y * blockDim.x + threadIdx.x;
+
+要计算一个thread在全局的ID
+thread_global_id = (blockDim.x * blockDim.y) * (gridDim.x * blockIdx.y + blockIdx.x) + blockDim.x * threadIdx.y + threadidx.x;
+
+要计算一个thread在全局的横坐标
+idx = blockIdx.x * blockDim.x + threadIdx.x;
+要计算一个thread在全局的纵坐标
+idy = blockIdx.y * blockDim.y + threadIdx.y;
+
+在GPU中，执行的最小单位是warp，也即32个thread。在一个warp中，所有的thread执行的指令流是一样的，硬件会取一条指令，来让一个warp中所有的thread执行。
+如果其中存在条件分支指令，就会导致一个warp中有的thread继续执行，有的thread阻塞，硬件资源的利用率会降低。
+因此真实的硬件在调用时真正调度的不是一个完整的warp的thread，而是半个warp的thread，这样在像因为条件分支而导致的大部分正在执行的thread阻塞时，就可以用调
+度器调度warp中另一半的thread来执行,以此来提高硬件的利用率。
